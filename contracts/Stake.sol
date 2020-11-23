@@ -391,11 +391,12 @@ contract Stake is Ownable {
     struct UserInfo {
         uint256 amount;
         uint256 rewardDebt;
+        bytes32 nodeID;
     }
     mapping (address => UserInfo) public userInfo;
 
-    uint256 lastRewardBlock;  // Last block number that Rewards distribution occurs.
-    uint256 accRewardPerShare; // Accumulated Rewards per share, times 1e12.
+    uint256 public lastRewardBlock;  // Last block number that Rewards distribution occurs.
+    uint256 public accRewardPerShare; // Accumulated Rewards per share, times 1e12.
 
     IERC20 public stakeToken;
     uint256 public rewardPerBlock;
@@ -406,6 +407,7 @@ contract Stake is Ownable {
     event Deposit(address indexed user, uint256 indexed amount);
     event Withdraw(address indexed user, uint256 indexed amount);
     event EmergencyWithdraw(address indexed user, uint256 indexed amount);
+    event RegisterNode(address indexed user, bytes32 indexed nodeID);
 
     constructor(
         IERC20 _stakeToken,
@@ -523,5 +525,13 @@ contract Stake is Ownable {
         user.rewardDebt = 0;
         stakeToken.safeTransfer(address(msg.sender), amount);
         emit EmergencyWithdraw(msg.sender, amount);
+    }
+
+    // Register node. must have stake
+    function registerNode(bytes32 nodeID) public {
+        UserInfo storage user = userInfo[msg.sender];
+        require(user.amount > 0, "no stake");
+        user.nodeID = nodeID;
+        emit RegisterNode(msg.sender, nodeID);
     }
 }
